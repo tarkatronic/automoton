@@ -1,0 +1,6 @@
+server {
+    listen {{ http_port }};
+    server_name localhost {{ external_ip.stdout }} {{ external_fqdn.stdout }} _;
+
+    root {{ web_root }};
+}

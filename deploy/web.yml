@@ -1,0 +1,46 @@
+---
+- hosts: all
+  vars:
+    http_port: 80
+    web_root: /srv/www/automoton
+  remote_user: ec2_user
+  become: yes
+  tasks:
+  - name: Collect our external IP address
+    command: curl -s http://ipinfo.io/ip
+    register: external_ip
+  - name: Collect our FQDN
+    shell: x=`dig +short -x {{ external_ip.stdout }}`;echo ${x::-1}
+    register: external_fqdn
+  - name: Ensure nginx is at the latest version
+    yum:
+      name: nginx
+      state: latest
+  - name: Write the nginx config file
+    template:
+      src: config/automoton.conf.j2
+      dest: /etc/nginx/conf.d/automoton.conf
+  - name: Ensure that {{ web_root }} exists
+    file:
+      path: "{{ web_root }}"
+      state: directory
+  - name: Put the index.html into place
+    copy:
+      src: ../index.html
+      dest: "{{ web_root }}/index.html"
+  - name: Start nginx and keep it running
+    service:
+      name: nginx
+      enabled: yes
+      state: started
+  - name: Send a notification email when we're done
+    mail:
+      to: "{{ notification_email }}"
+      from: root@localhost
+      subject: Ansible system, reporting for duty!
+      body: |
+       System {{ ansible_hostname }} is up and ready to go.
+
+       Internal IP Address: {{ ansible_default_ipv4.address }}
+       External IP Address: {{ external_ip.stdout }}
+       Web address: {{ external_fqdn.stdout }}
