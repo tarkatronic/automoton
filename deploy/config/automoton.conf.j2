@@ -1,6 +1,8 @@
 server {
-    listen {{ http_port }};
-    server_name localhost {{ external_ip.stdout }} {{ external_fqdn.stdout }} _;
+    listen {{ http_port }} default_server;
+    listen [::]:80 default_server;
+
+    server_name _;
 
     root {{ web_root }};
 }

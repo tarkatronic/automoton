@@ -16,6 +16,8 @@
     yum:
       name: nginx
       state: latest
+  - name: Remove the default default_server from nginx
+    shell: sed -i 's/80 default_server;/80;/' /etc/nginx/nginx.conf
   - name: Write the nginx config file
     template:
       src: config/automoton.conf.j2
